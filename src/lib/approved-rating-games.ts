@@ -68,6 +68,7 @@ export async function approvedRatingGames(
     const proposal = reviewedResultSchema.safeParse(source.revision.proposal);
     const common = {
       fixtureId: source.fixture.id,
+      roundId: source.fixture.roundId,
       at: source.fixture.scheduledAt?.toISOString() ?? null,
       revision: source.revision.revision,
       fingerprint: source.fingerprint,

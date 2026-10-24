@@ -956,6 +956,7 @@ export const awardSettings = pgTable(
       .primaryKey()
       .references(() => editionState.slug),
     version: integer("version").notNull().default(0),
+    policy: text("policy").notNull().default("relative-game-mean-v1"),
     weeks: jsonb("weeks")
       .$type<import("@/lib/award-model").AwardWeek[]>()
       .notNull()

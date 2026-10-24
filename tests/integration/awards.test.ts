@@ -53,6 +53,7 @@ describe.skipIf(!url)("edition weekly award review and publication", () => {
     const seeded = await seedAwardReview(admin.osuId, referee.osuId);
     const data = await awardCommand(admin, "test-cup", {
       action: "configure",
+      policy: "relative-game-mean-v1",
       confirmed: true,
       expectedVersion: 0,
       weeks: awardWeeks,
@@ -165,6 +166,7 @@ describe.skipIf(!url)("edition weekly award review and publication", () => {
     await expect(
       awardCommand(admin, "test-cup", {
         action: "configure",
+        policy: "relative-game-mean-v1",
         confirmed: true,
         expectedVersion: 1,
         weeks: awardWeeks,
@@ -245,6 +247,7 @@ describe.skipIf(!url)("edition weekly award review and publication", () => {
     });
     const command = {
       action: "configure",
+      policy: "relative-game-mean-v1",
       confirmed: true,
       expectedVersion: 1,
       weeks: awardWeeks,

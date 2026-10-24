@@ -1,7 +1,15 @@
 import { createHash } from "node:crypto";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { registrations, users, captains, memberships } from "@/db/schema";
+import {
+  registrations,
+  users,
+  captains,
+  memberships,
+  fixtures as fixtureTable,
+  tournamentRounds,
+  tournamentStages,
+} from "@/db/schema";
 import {
   approvedRatingGames,
   type RatingReader,
@@ -128,4 +136,139 @@ export async function publicMatchRating(slug: string, fixtureId: string) {
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },
   );
+}
+
+/** Same population and approval gates as single fixtures, with raw-game reaggregation. */
+export async function publicRoundRatings(slug: string) {
+  if (!process.env.DATABASE_URL) return [];
+  return db().transaction(
+    async (tx) => {
+      const competition = await publicCompetition(slug, tx);
+      if (!competition) return [];
+      const fixtures = competition.fixtures.filter(
+        (f) => f.status !== "cancelled",
+      );
+      const identities = await ratingIdentities(slug, tx, [
+        ...new Set(
+          fixtures.flatMap((f) =>
+            [f.home.team?.id, f.away.team?.id].filter(
+              (id): id is string => !!id,
+            ),
+          ),
+        ),
+      ]);
+      const games = await approvedRatingGames(slug, tx);
+      const allFixtures = await tx
+        .select({ id: fixtureTable.id, roundId: fixtureTable.roundId })
+        .from(fixtureTable)
+        .where(
+          and(
+            eq(fixtureTable.editionSlug, slug),
+            ne(fixtureTable.status, "cancelled"),
+          ),
+        );
+      return [...new Set(fixtures.map((f) => f.roundId))].flatMap((roundId) => {
+        const round = fixtures.filter((f) => f.roundId === roundId);
+        const scopes = [
+          { key: "", name: "", teamIds: null as string[] | null },
+          ...competition.groups.map((g) => ({
+            key: g.key,
+            name: g.name,
+            teamIds: g.rows.map((r) => r.team.id),
+          })),
+        ];
+        return scopes
+          .filter((scope) => !scope.key || round[0].stage === "group")
+          .flatMap((scope) => {
+            const selected = round.filter(
+              (f) =>
+                !scope.teamIds ||
+                (scope.teamIds.includes(f.home.team?.id ?? "") &&
+                  scope.teamIds.includes(f.away.team?.id ?? "")),
+            );
+            if (!selected.length) return [];
+            const available = selected.filter((f) => f.result);
+            const ids = new Set(available.map((f) => f.id));
+            const source = games.filter((g) => ids.has(g.fixtureId));
+            const withheld = source.some((g) =>
+              g.scores.some((s) => !identities.has(s.userId)),
+            );
+            const report = ratingSnapshot(withheld ? [] : source, identities);
+            const complete =
+              available.length === selected.length &&
+              !report.issues.length &&
+              !withheld &&
+              available.every((f) =>
+                source.some((g) => g.fixtureId === f.id),
+              ) &&
+              allFixtures
+                .filter((f) => f.roundId === roundId)
+                .every((f) => round.some((p) => p.id === f.id));
+            return [
+              {
+                roundId,
+                roundName: round[0].roundName,
+                stage: round[0].stage,
+                groupKey: scope.key,
+                groupName: scope.name,
+                publishedFixtures: selected.length,
+                ratedFixtures: withheld
+                  ? 0
+                  : available.filter((f) =>
+                      source.some((g) => g.fixtureId === f.id),
+                    ).length,
+                complete,
+                report,
+              },
+            ];
+          });
+      });
+    },
+    { isolationLevel: "repeatable read", accessMode: "read only" },
+  );
+}
+
+export async function staffRoundRatings(
+  slug: string,
+  reader: RatingReader,
+  games: RatingGame[],
+  identities: Map<number, string>,
+) {
+  const rows = await reader
+    .select({
+      fixture: fixtureTable,
+      round: tournamentRounds,
+      stage: tournamentStages.kind,
+    })
+    .from(fixtureTable)
+    .innerJoin(tournamentRounds, eq(tournamentRounds.id, fixtureTable.roundId))
+    .innerJoin(
+      tournamentStages,
+      eq(tournamentStages.id, tournamentRounds.stageId),
+    )
+    .where(
+      and(
+        eq(fixtureTable.editionSlug, slug),
+        ne(fixtureTable.status, "cancelled"),
+      ),
+    );
+  return [...new Set(rows.map((r) => r.round.id))].map((roundId) => {
+    const round = rows.filter((r) => r.round.id === roundId);
+    const source = games.filter((g) =>
+      round.some((r) => r.fixture.id === g.fixtureId),
+    );
+    const report = ratingSnapshot(source, identities);
+    const ratedFixtures = new Set(source.map((g) => g.fixtureId)).size;
+    return {
+      roundId,
+      roundName: round[0].round.name,
+      stage: round[0].stage,
+      groupKey: "",
+      groupName: "",
+      publishedFixtures: round.filter((r) => r.fixture.publishedAt).length,
+      ratedFixtures,
+      complete: ratedFixtures === round.length && !report.issues.length,
+      report,
+    };
+  });
 }

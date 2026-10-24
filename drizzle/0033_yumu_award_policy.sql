@@ -1,0 +1,1 @@
+ALTER TABLE "award_settings" ADD COLUMN "policy" text DEFAULT 'relative-game-mean-v1' NOT NULL;

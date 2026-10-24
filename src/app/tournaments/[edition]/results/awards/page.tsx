@@ -8,7 +8,7 @@ import { historicalPage } from "@/components/historical-archive";
 import { PageHeading } from "@/components/ui";
 import { AwardPolicy } from "@/components/award-policy";
 import { AwardTable } from "@/components/award-table";
-import { awardPercentage } from "@/lib/award-model";
+import { awardValue } from "@/lib/award-model";
 export const dynamic = "force-dynamic";
 export default async function Awards({
   params,
@@ -30,7 +30,7 @@ export default async function Awards({
   return (
     <>
       <PageHeading title={tr("Weekly awards")} />
-      <AwardPolicy />
+      <AwardPolicy policy={releases.find((r) => r.week === selected)?.policy} />
       {!releases.length && (
         <p className="muted">{tr("No weekly awards published yet.")}</p>
       )}
@@ -97,10 +97,15 @@ export default async function Awards({
                               </a>
                               <p className="muted small">
                                 {kind === "mip"
-                                  ? tr("{value0} percentage points", {
-                                      value0: `+${(player.improvement! / 10_000_000).toFixed(7)}`,
-                                    })
-                                  : awardPercentage(player.performance)}{" "}
+                                  ? release.policy === "yumu-mra-v1"
+                                    ? `+${awardValue(player.improvement!, release.policy)}`
+                                    : tr("{value0} percentage points", {
+                                        value0: `+${(player.improvement! / 10_000_000).toFixed(7)}`,
+                                      })
+                                  : awardValue(
+                                      player.performance,
+                                      release.policy,
+                                    )}{" "}
                                 ·{" "}
                                 {tr("{value0} appearances", {
                                   value0: player.appearances,
@@ -111,10 +116,15 @@ export default async function Awards({
                                 {kind === "mip" && (
                                   <>
                                     <br />
-                                    {awardPercentage(
+                                    {awardValue(
                                       player.previousPerformance!,
+                                      release.policy,
                                     )}{" "}
-                                    → {awardPercentage(player.performance)}
+                                    →{" "}
+                                    {awardValue(
+                                      player.performance,
+                                      release.policy,
+                                    )}
                                   </>
                                 )}
                               </p>

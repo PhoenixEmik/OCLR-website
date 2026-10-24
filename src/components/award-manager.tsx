@@ -8,9 +8,10 @@ import { useState } from "react";
 import { useAppTranslations } from "@/i18n/shared";
 import { awardTierLabel } from "@/lib/award-tiers";
 import type { awardWorkspace } from "@/lib/awards";
-import type { AwardWeek } from "@/lib/award-model";
+import type { AwardWeek, AwardPolicy as Policy } from "@/lib/award-model";
 import { ZonedDateInput } from "./zoned-date-input";
 import { AwardPolicy } from "./award-policy";
+import { RoundRatings } from "./round-ratings";
 import { AwardTable } from "./award-table";
 type Data = Awaited<ReturnType<typeof awardWorkspace>>;
 export function AwardManager({ initial }: { initial: Data }) {
@@ -18,13 +19,16 @@ export function AwardManager({ initial }: { initial: Data }) {
   const tr = useAppTranslations();
   const [data, setData] = useState(initial),
     [weeks, setWeeks] = useState<AwardWeek[]>(initial.weeks);
+  const [policy, setPolicy] = useState<Policy>(initial.policy);
   const [selected, setSelected] = useState(1),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
   const [validity, setValidity] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
-  const dirty = JSON.stringify(weeks) !== JSON.stringify(data.weeks);
+  const dirty =
+    JSON.stringify(weeks) !== JSON.stringify(data.weeks) ||
+    policy !== data.policy;
   async function send(command: Record<string, unknown>) {
     if (readOnly) return;
     setBusy(true);
@@ -48,6 +52,7 @@ export function AwardManager({ initial }: { initial: Data }) {
         throw new Error(result.error ?? "Unable to save changes.");
       setData(result);
       setWeeks(result.weeks);
+      setPolicy(result.policy);
       setNotice("Saved.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to save changes.");
@@ -59,7 +64,8 @@ export function AwardManager({ initial }: { initial: Data }) {
     release = data.releases.find((r) => r.week === selected);
   return (
     <div className="form-stack">
-      <AwardPolicy />
+      <AwardPolicy policy={policy} />
+      <RoundRatings slug={data.edition.slug} data={data.roundRatings} />
       {error && (
         <p role="alert" className="error-text">
           {tr(error)}
@@ -72,9 +78,23 @@ export function AwardManager({ initial }: { initial: Data }) {
           className="form-stack"
           onSubmit={(e) => {
             e.preventDefault();
-            void send({ action: "configure", weeks });
+            void send({ action: "configure", weeks, policy });
           }}
         >
+          <ReadOnlyFields>
+            <label className="field">
+              <span>{tr("Rating policy")}</span>
+              <select
+                value={policy}
+                onChange={(e) => setPolicy(e.target.value as Policy)}
+              >
+                <option value="yumu-mra-v1">{tr("YumuRating")}</option>
+                <option value="relative-game-mean-v1">
+                  {tr("Legacy relative-score mean")}
+                </option>
+              </select>
+            </label>
+          </ReadOnlyFields>
           <p className="muted small">{data.edition.timeZone}</p>
           {weeks.map((week, index) => (
             <ReadOnlyFields key={week.number}>

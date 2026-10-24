@@ -2345,6 +2345,15 @@
     "mc0552b46dd91": "Small comparison group; interpret this rating with care.",
     "mf579e86355ef": "Player ratings; scroll horizontally",
     "m410b53192130": "Player ratings",
-    "m51296d3267e2": "Game {value0}"
+    "m51296d3267e2": "Game {value0}",
+    "m2312fd7719c5": "Rating policy",
+    "m7f0e5aabfae7": "Legacy relative-score mean",
+    "m5b2caea06fb5": "One approved scored game is one appearance. Weekly performance is YumuRating MRA recomputed from all approved games in the configured week, without star weighting. The fixture belongs to its scheduled week.",
+    "mfb86f76b6847": "MRA is rounded to 9 decimal places. MIP uses the absolute MRA gain between adjacent weeks. Different comparison groups can affect relative ratings. Only reviewed and published awards are public.",
+    "mc31587af5f22": "Round YumuRating",
+    "m0bb12eec78f1": "All fixtures in this scope have approved rating data.",
+    "m9e018ed76d39": "Provisional: this round has incomplete or unavailable rating data.",
+    "mb23c458f1b42": "{value0} of {value1} published fixtures have rating data.",
+    "m1c06c0997ac5": "This award week still has fixtures awaiting approved published game data."
   }
 }

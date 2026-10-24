@@ -1,3 +1,5 @@
+import { publicRoundRatings } from "@/lib/ratings";
+import { RoundRatings } from "@/components/round-ratings";
 import { historicalPage } from "@/components/historical-archive";
 import { getAppTranslations } from "@/i18n/server";
 import { notFound } from "next/navigation";
@@ -37,6 +39,7 @@ export default async function Results({
         slug={slug}
         groups={data?.groups ?? []}
       />
+      <RoundRatings slug={slug} data={await publicRoundRatings(slug)} />
       <GroupStandings groups={data?.groups ?? []} slug={slug} />
     </>
   );

@@ -232,6 +232,13 @@
       "when": 1792850706308,
       "tag": "0032_player_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792852658882,
+      "tag": "0033_yumu_award_policy",
+      "breakpoints": true
     }
   ]
 }

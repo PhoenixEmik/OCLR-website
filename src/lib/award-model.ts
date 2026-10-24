@@ -1,5 +1,8 @@
+import { calculateRating, YUMU_POLICY, type PlayerRating } from "./yumu-rating";
 import { z } from "zod";
 export const AWARD_POLICY = "relative-game-mean-v1";
+export type AwardPolicy = typeof AWARD_POLICY | typeof YUMU_POLICY;
+export const awardPolicySchema = z.enum([AWARD_POLICY, YUMU_POLICY]);
 export const awardWeekSchema = z
   .object({
     number: z.number().int().min(1).max(52),
@@ -14,6 +17,7 @@ export const awardWeekSchema = z
 export const awardConfigurationSchema = z
   .object({
     weeks: z.array(awardWeekSchema).max(52),
+    policy: awardPolicySchema.default(AWARD_POLICY),
   })
   .strict()
   .superRefine(({ weeks }, context) => {
@@ -38,7 +42,9 @@ export type AwardGame = {
   at: string | null;
   revision: number;
   fingerprint: string;
-  scores: { userId: number; total: number }[];
+  scores: { userId: number; total: number; teamId?: string }[];
+  teamIds?: string[];
+  winnerTeamId?: string | null;
   problem?: string;
 };
 export type AwardCandidate = {
@@ -49,6 +55,7 @@ export type AwardCandidate = {
   previousAppearances: number;
   previousPerformance: number | null;
   improvement: number | null;
+  rating?: PlayerRating;
 };
 export type AwardStanding = {
   candidates: AwardCandidate[];
@@ -71,6 +78,7 @@ export function weeklyStandings(
   weeks: AwardWeek[],
   tiers: AwardTier[],
   games: AwardGame[],
+  policy: AwardPolicy = AWARD_POLICY,
 ) {
   const totals = weeks.map(
     () => new Map<number, { units: bigint; count: number }>(),
@@ -150,15 +158,51 @@ export function weeklyStandings(
     Number(
       (value.units + BigInt(Math.floor(value.count / 2))) / BigInt(value.count),
     );
+  const ratings =
+    policy === YUMU_POLICY
+      ? weeks.map((week) =>
+          calculateRating(
+            games
+              .filter(
+                (g) =>
+                  g.at &&
+                  Date.parse(g.at) >= Date.parse(week.startsAt) &&
+                  Date.parse(g.at) < Date.parse(week.endsAt),
+              )
+              .map((g) => ({
+                ...g,
+                teamIds: g.teamIds ?? [],
+                winnerTeamId: g.winnerTeamId ?? null,
+                scores: g.scores.map((s) => ({ ...s, teamId: s.teamId ?? "" })),
+              })),
+          ),
+        )
+      : [];
   const tierMap = new Map(tiers.map((tier) => [tier.userId, tier.tier]));
   return weeks.map((week, index): AwardWeek & AwardStanding => {
+    const rated = ratings[index];
     const candidates = [...totals[index]]
       .map(([userId, value]) => {
         const previous = index ? totals[index - 1].get(userId) : undefined;
-        const performance = mean(value),
-          previousPerformance = previous ? mean(previous) : null;
+        const rating = rated?.players.find((p) => p.userId === userId);
+        const previousRating = index
+          ? ratings[index - 1]?.players.find((p) => p.userId === userId)
+          : undefined;
+        const performance =
+            policy === YUMU_POLICY
+              ? Math.round((rating?.mra ?? 0) * 1e9)
+              : mean(value),
+          previousPerformance =
+            policy === YUMU_POLICY
+              ? previousRating
+                ? Math.round(previousRating.mra * 1e9)
+                : null
+              : previous
+                ? mean(previous)
+                : null;
         return {
           userId,
+          ...(rating ? { rating } : {}),
           tier: tierMap.get(userId) ?? null,
           appearances: value.count,
           performance,
@@ -207,6 +251,12 @@ export function weeklyStandings(
       issues: [
         ...new Set([
           ...issues[index],
+          ...(rated?.issues ?? []),
+          ...(index
+            ? (ratings[index - 1]?.issues ?? []).map(
+                (issue) => `Previous week: ${issue}`,
+              )
+            : []),
           ...(index
             ? issues[index - 1].map((issue) => `Previous week: ${issue}`)
             : []),
@@ -221,4 +271,10 @@ export function weeklyStandings(
 }
 export function awardPercentage(units: number) {
   return `${(units / 10_000_000).toFixed(7)}%`;
+}
+
+export function awardValue(units: number, policy: string) {
+  return policy === YUMU_POLICY
+    ? (units / 1e9).toFixed(4)
+    : awardPercentage(units);
 }

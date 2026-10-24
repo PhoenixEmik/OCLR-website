@@ -13,6 +13,7 @@ export type RatingGame = {
   revision: number;
   fingerprint: string;
   approvalFingerprint?: string;
+  roundId?: string;
   at: string | null;
   teamIds: string[];
   winnerTeamId: string | null;

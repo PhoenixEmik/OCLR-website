@@ -35,6 +35,7 @@ test.describe("weekly awards review", () => {
         await context.request.post(endpoint, {
           data: {
             action: "configure",
+            policy: "relative-game-mean-v1",
             confirmed: true,
             expectedVersion: 0,
             weeks: awardWeeks,
@@ -64,7 +65,9 @@ test.describe("weekly awards review", () => {
     await page
       .getByRole("button", { name: "Approve & publish", exact: true })
       .click();
-    await expect(page.getByRole("status")).toHaveText("Saved.");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Saved." }),
+    ).toHaveText("Saved.");
     const anonymous = await browser.newContext({
       baseURL: "http://127.0.0.1:3100",
       storageState: {
