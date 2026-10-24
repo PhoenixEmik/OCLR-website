@@ -1,3 +1,5 @@
+import { publicMatchRating } from "@/lib/ratings";
+import { PlayerRatings } from "@/components/player-ratings";
 import { historicalPage } from "@/components/historical-archive";
 import { getAppTranslations } from "@/i18n/server";
 import Link from "next/link";
@@ -23,6 +25,7 @@ export default async function MatchPage({
   const f = await publicFixture(slug, fixtureId);
   if (!f) notFound();
   const result = f.result;
+  const rating = result ? await publicMatchRating(slug, fixtureId) : null;
   const teamName = (id: string | null) =>
     id === f.home.team?.id
       ? f.home.label
@@ -127,6 +130,7 @@ export default async function MatchPage({
           </p>
         )}
       </section>
+      {rating && <PlayerRatings report={rating} slug={slug} />}
       {result && (
         <section className="section-space stack">
           <h2>{tr("Played maps")}</h2>

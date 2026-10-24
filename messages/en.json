@@ -2336,6 +2336,15 @@
     "m53c6d1954f9a": "Enter a message of 1 to 1000 characters.",
     "m69728f1dbfbd": "This message request has already been used.",
     "md4bfce56416a": "Please wait before posting another message.",
-    "m3da57e084a89": "An explicitly designated self introduction is public after application acceptance; other questionnaire answers remain private. Signed player messages are public and identify the authenticated author's osu! account."
+    "m3da57e084a89": "An explicitly designated self introduction is public after application acceptance; other questionnaire answers remain private. Signed player messages are public and identify the authenticated author's osu! account.",
+    "ma664ade2dd3a": "YumuRating",
+    "m3beaa85bd37c": "MRA combines 70% ERA and 30% DRA. Higher is better. No star weighting is applied.",
+    "m4452d4778885": "{value0} scored games · {value1} players",
+    "me03e72ffc1ec": "Rating unavailable; approved score data needs review.",
+    "m804df89b5190": "No approved scored games available for rating.",
+    "mc0552b46dd91": "Small comparison group; interpret this rating with care.",
+    "mf579e86355ef": "Player ratings; scroll horizontally",
+    "m410b53192130": "Player ratings",
+    "m51296d3267e2": "Game {value0}"
   }
 }
