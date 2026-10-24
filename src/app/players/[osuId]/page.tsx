@@ -1,3 +1,5 @@
+import { publicRoundRatings } from "@/lib/ratings";
+import { RoundRatings } from "@/components/round-ratings";
 import { getAppTranslations } from "@/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -41,6 +43,22 @@ export default async function Profile({
     if (e instanceof HttpError && [400, 404].includes(e.status)) notFound();
     throw e;
   }
+  const ratingHistory =
+    typeof query.edition === "string"
+      ? (await publicRoundRatings(query.edition))
+          .filter((r) =>
+            r.report.players.some((p) => p.userId === Number(osuId)),
+          )
+          .map((r) => ({
+            ...r,
+            report: {
+              ...r.report,
+              players: r.report.players.filter(
+                (p) => p.userId === Number(osuId),
+              ),
+            },
+          }))
+      : [];
   return (
     <div
       className={
@@ -101,6 +119,9 @@ export default async function Profile({
           {data.error?.message}{" "}
           {tr(" Published OCLR participation is shown below.")}
         </p>
+      )}
+      {typeof query.edition === "string" && (
+        <RoundRatings data={ratingHistory} slug={query.edition} />
       )}
       <section className="spaced" aria-labelledby="participation">
         <h2 id="participation">{tr("Published participation")}</h2>

@@ -1,4 +1,5 @@
 "use client";
+import { PlayerClassBadge } from "./player-class-badge";
 import { useAppTranslations } from "@/i18n/shared";
 import { awardTierLabel } from "@/lib/award-tiers";
 import { awardValue, type AwardCandidate } from "@/lib/award-model";
@@ -27,6 +28,7 @@ export function AwardTable({
             <th>{tr("Tier")}</th>
             <th>{tr("Appearances")}</th>
             <th>{tr("Weekly performance")}</th>
+            {policy === "yumu-mra-v1" && <th>{tr("Player evaluation")}</th>}
             <th>{tr("Previous week")}</th>
             <th>{tr("Improvement")}</th>
             <th>{tr("Awards")}</th>
@@ -48,6 +50,14 @@ export function AwardTable({
               <td>{awardTierLabel(row.tier)}</td>
               <td>{row.appearances}</td>
               <td>{awardValue(row.performance, policy)}</td>
+              {policy === "yumu-mra-v1" && (
+                <td>
+                  <PlayerClassBadge
+                    classification={row.ratingClass ?? null}
+                    indices={row.rating}
+                  />
+                </td>
+              )}
               <td>
                 {row.previousPerformance === null
                   ? "—"

@@ -1,3 +1,4 @@
+import type { PlayerClass } from "./player-class";
 import { calculateRating, YUMU_POLICY, type PlayerRating } from "./yumu-rating";
 import { z } from "zod";
 export const AWARD_POLICY = "relative-game-mean-v1";
@@ -56,6 +57,8 @@ export type AwardCandidate = {
   previousPerformance: number | null;
   improvement: number | null;
   rating?: PlayerRating;
+  ratingClass?: PlayerClass | null;
+  ratingPlayerCount?: number;
 };
 export type AwardStanding = {
   candidates: AwardCandidate[];
@@ -202,7 +205,7 @@ export function weeklyStandings(
                 : null;
         return {
           userId,
-          ...(rating ? { rating } : {}),
+          ...(rating ? { rating, ratingPlayerCount: rated!.playerCount } : {}),
           tier: tierMap.get(userId) ?? null,
           appearances: value.count,
           performance,

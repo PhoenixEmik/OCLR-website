@@ -1,3 +1,4 @@
+import { classifyPlayer, PLAYER_CLASS_POLICY } from "./player-class";
 import { createHash } from "node:crypto";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db";
@@ -82,10 +83,12 @@ export function ratingSnapshot(
   ].sort((a, b) => a.gameId - b.gameId);
   const players = report.players.map((p) => ({
     ...p,
+    classification: classifyPlayer(p, report.playerCount),
     username: identities.get(p.userId) ?? String(p.userId),
   }));
   return {
     ...report,
+    classificationPolicy: PLAYER_CLASS_POLICY,
     players,
     evidence,
     fingerprint: createHash("sha256")

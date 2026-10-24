@@ -1,4 +1,5 @@
 "use client";
+import { PlayerClassBadge } from "./player-class-badge";
 import Link from "next/link";
 import { useAppTranslations } from "@/i18n/shared";
 import type { ratingSnapshot } from "@/lib/ratings";
@@ -24,6 +25,11 @@ export function PlayerRatings({
           value0: report.gameCount,
           value1: report.playerCount,
         })}
+      </p>
+      <p className="muted small">
+        {tr(
+          "Player evaluations describe this comparison group only; they do not change draft Tiers or award eligibility.",
+        )}
       </p>
       {report.issues.length ? (
         <p role="status" className="notice">
@@ -53,6 +59,7 @@ export function PlayerRatings({
                   <th scope="col">{tr("Rank")}</th>
                   <th scope="col">{tr("Player")}</th>
                   <th scope="col">{tr("Appearances")}</th>
+                  <th scope="col">{tr("Player evaluation")}</th>
                   <th scope="col">{"MRA"}</th>
                   <th scope="col">{"ERA"}</th>
                   <th scope="col">{"DRA"}</th>
@@ -72,6 +79,12 @@ export function PlayerRatings({
                       </Link>
                     </th>
                     <td>{p.appearances}</td>
+                    <td>
+                      <PlayerClassBadge
+                        classification={p.classification}
+                        indices={p}
+                      />
+                    </td>
                     <td>
                       <strong>{p.mra.toFixed(4)}</strong>
                     </td>

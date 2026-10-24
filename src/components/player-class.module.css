@@ -1,0 +1,38 @@
+.evaluation {
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+}
+.badge {
+  border-inline-start: 3px solid var(--site-muted);
+  padding-inline-start: 0.5rem;
+  color: var(--site-foreground);
+  font-weight: 600;
+  cursor: pointer;
+}
+.badge[data-category="BC"],
+.badge[data-category="CA"] {
+  border-color: var(--site-accent);
+}
+.badge[data-category="MF"],
+.badge[data-category="SP"] {
+  border-color: var(--site-success);
+}
+.badge[data-category="WF"],
+.badge[data-category="GE"],
+.badge[data-category="GU"] {
+  border-color: var(--site-warning);
+}
+.badge[data-category="SU"],
+.badge[data-category="SG"] {
+  border-color: var(--site-accent-strong);
+}
+.explanation {
+  display: grid;
+  gap: 0.5rem;
+  padding-block: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.explanation p {
+  margin: 0;
+}
